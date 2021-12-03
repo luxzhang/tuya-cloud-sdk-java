@@ -12,7 +12,10 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 通用客户端类
@@ -25,6 +28,10 @@ public class CommonClient {
      */
     private static final int maxRetry = 3;
 
+    /**
+     * 默认字符集
+     **/
+    private static final String DEFAULT_CHARSET = "UTF-8";
 
     /**
      * 执行请求
@@ -58,6 +65,39 @@ public class CommonClient {
         return result;
     }
 
+    /**
+     * 执行请求
+     *
+     * @param url 请求url
+     * @param param  请求参数
+     * @param header 增加的请求头
+     * @param body 请求体
+     * @return
+     */
+    public static TuyaResult httpGet(String url, Map<String, String> param, Map<String, String> header, Object body) {
+        TuyaResult result = null;
+        int retry = CommonClient.maxRetry;
+        boolean retryFlag = Boolean.TRUE;
+
+        url = assembleGet(url, param, DEFAULT_CHARSET);
+
+        while (retry >= 0 && retryFlag) {
+            try {
+                result = execute(url, HttpMethod.GET, header, body);
+                retryFlag = Boolean.FALSE;
+            } catch (TuyaCloudSDKException e) {
+                // token无效，重新获取token
+                if (e.getCode() != null && 1010 == e.getCode() && retry > 0) {
+                    retry--;
+                    TokenClient.getToken();
+                } else {
+                    throw e;
+                }
+            }
+        }
+
+        return result;
+    }
 
     /**
      * 执行请求
@@ -108,5 +148,40 @@ public class CommonClient {
         } catch (IOException e) {
             throw new TuyaCloudSDKException(e.getMessage());
         }
+    }
+
+    /**
+     * 将参数拼接到url里并返回get对象
+     * *
+     * * @param pathurl
+     * * @param params
+     * * @param charset
+     * * @return
+     */
+    private static String assembleGet(String url, Map <String, String> params, String charset) {
+        if (params == null || params.size() == 0) {
+            return url;
+        }
+        StringBuilder buff = new StringBuilder(url);
+        Set<Map.Entry <String, String>> entrySet = params.entrySet();
+        // url里是否已包含了问号
+        boolean containsInterrogation = (url.indexOf('?') != -1);
+        String value;
+        for (Map.Entry <String, String> entry : entrySet) {
+            if (containsInterrogation) {
+                buff.append('&');
+            } else {
+                buff.append('?');
+                containsInterrogation = true;
+            }
+            value = entry.getValue();
+            try {
+                buff.append(entry.getKey()).append('=')
+                        .append(value == null ? "" : URLEncoder.encode(value, charset));
+            } catch (UnsupportedEncodingException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return buff.toString();
     }
 }

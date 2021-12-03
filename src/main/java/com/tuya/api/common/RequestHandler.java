@@ -41,6 +41,20 @@ public class RequestHandler {
     private static final int maxRetry = 3;
 
 
+    private static final long DEFAULT_KEEP_ALIVE_DURATION_MS = 5 * 60 * 1000; // 5 min
+
+    private static OkHttpClient DEFAULT_CLIENT;
+
+    static {
+        DEFAULT_CLIENT = new OkHttpClient();
+        DEFAULT_CLIENT.setConnectTimeout(connTimeout, TimeUnit.SECONDS);
+        DEFAULT_CLIENT.setReadTimeout(readTimeout, TimeUnit.SECONDS);
+        DEFAULT_CLIENT.setWriteTimeout(writeTimeout, TimeUnit.SECONDS);
+        ConnectionPool connectionPool = new ConnectionPool(1000, DEFAULT_KEEP_ALIVE_DURATION_MS);
+        DEFAULT_CLIENT.setConnectionPool(connectionPool);
+    }
+
+
     /**
      * 执行请求, 默认需要携带token
      *
@@ -302,11 +316,6 @@ public class RequestHandler {
      * @return
      */
     private static OkHttpClient getHttpClient() {
-        OkHttpClient client = new OkHttpClient();
-        client.setConnectTimeout(connTimeout, TimeUnit.SECONDS);
-        client.setReadTimeout(readTimeout, TimeUnit.SECONDS);
-        client.setWriteTimeout(writeTimeout, TimeUnit.SECONDS);
-
-        return client;
+        return DEFAULT_CLIENT;
     }
 }
