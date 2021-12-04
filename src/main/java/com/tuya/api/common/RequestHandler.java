@@ -40,17 +40,26 @@ public class RequestHandler {
      */
     private static final int maxRetry = 3;
 
+    /**
+     * 连接池最大空闲连接数
+     */
+    private static final Integer DEFAULT_MAXIDLE_CONNECTIONS = 32; // 5 min
 
-    private static final long DEFAULT_KEEP_ALIVE_DURATION_MS = 5 * 60 * 1000; // 5 min
+    /**
+     * 连接池最大的空闲时间
+     */
+    private static final long DEFAULT_KEEP_ALIVE_DURATION_MS = 10 * 60 * 1000; // 5 min
 
+    /**
+     * 初始化httpClient
+     */
     private static OkHttpClient DEFAULT_CLIENT;
-
     static {
         DEFAULT_CLIENT = new OkHttpClient();
         DEFAULT_CLIENT.setConnectTimeout(connTimeout, TimeUnit.SECONDS);
         DEFAULT_CLIENT.setReadTimeout(readTimeout, TimeUnit.SECONDS);
         DEFAULT_CLIENT.setWriteTimeout(writeTimeout, TimeUnit.SECONDS);
-        ConnectionPool connectionPool = new ConnectionPool(1000, DEFAULT_KEEP_ALIVE_DURATION_MS);
+        ConnectionPool connectionPool = new ConnectionPool(DEFAULT_MAXIDLE_CONNECTIONS, DEFAULT_KEEP_ALIVE_DURATION_MS);
         DEFAULT_CLIENT.setConnectionPool(connectionPool);
     }
 
