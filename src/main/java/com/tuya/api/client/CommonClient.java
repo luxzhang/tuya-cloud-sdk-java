@@ -71,10 +71,9 @@ public class CommonClient {
      * @param url 请求url
      * @param param  请求参数
      * @param header 增加的请求头
-     * @param body 请求体
      * @return
      */
-    public static TuyaResult httpGet(String url, Map<String, String> param, Map<String, String> header, Object body) {
+    public static TuyaResult httpGet(String url, Map<String, String> param, Map<String, String> header) {
         TuyaResult result = null;
         int retry = CommonClient.maxRetry;
         boolean retryFlag = Boolean.TRUE;
@@ -83,7 +82,7 @@ public class CommonClient {
 
         while (retry >= 0 && retryFlag) {
             try {
-                result = execute(url, HttpMethod.GET, header, body);
+                result = execute(url, HttpMethod.GET, header, null);
                 retryFlag = Boolean.FALSE;
             } catch (TuyaCloudSDKException e) {
                 // token无效，重新获取token
